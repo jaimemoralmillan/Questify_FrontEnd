@@ -15,7 +15,7 @@
         </ion-toolbar>
       </ion-header>
       
-      <div v-if="isLoading" class="spinner-container" style="display: flex; justify-content: center; align-items: center; height: 100%;">
+      <div v-if="isLoading" class="spinner-container">
         <ion-spinner></ion-spinner>
       </div>
 
@@ -47,6 +47,8 @@
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, onIonViewDidEnter, IonSpinner, IonProgressBar } from '@ionic/vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'; // Fallback for local dev
 
 // Define interfaces (can be imported or defined here if specific to profile)
 interface User {
@@ -84,7 +86,7 @@ const fetchUserProfile = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:8000/api/profile/', {
+    const response = await fetch(`${API_BASE_URL}/api/profile/`, {
       method: 'GET',
       headers: {
         'Authorization': `Token ${token}`,
@@ -124,5 +126,11 @@ onIonViewDidEnter(() => {
 <style scoped>
 #container {
   text-align: center;
+}
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 </style>

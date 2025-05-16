@@ -105,6 +105,8 @@ import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 import { trashOutline, pencilOutline, personCircleOutline } from 'ionicons/icons';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'; // Fallback for local dev
+
 interface Task {
   id: number;
   title: string;
@@ -178,7 +180,7 @@ const fetchUserProfile = async () => {
     return;
   }
   try {
-    const response = await fetch('http://localhost:8000/api/profile/', {
+    const response = await fetch(`${API_BASE_URL}/api/profile/`, {
       method: 'GET',
       headers: {
         'Authorization': `Token ${token}`,
@@ -217,7 +219,7 @@ const fetchTasks = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:8000/api/tasks/', {
+    const response = await fetch(`${API_BASE_URL}/api/tasks/`, {
       method: 'GET',
       headers: {
         'Authorization': `Token ${token}`,
@@ -264,7 +266,7 @@ const handleCreateTask = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:8000/api/tasks/', {
+    const response = await fetch(`${API_BASE_URL}/api/tasks/`, {
       method: 'POST',
       headers: {
         'Authorization': `Token ${token}`,
@@ -317,7 +319,7 @@ const handleToggleCompleteTask = async (task: Task) => {
   const previousCompletedStatus = task.completed;
 
   try {
-    const response = await fetch(`http://localhost:8000/api/tasks/${task.id}/`, {
+    const response = await fetch(`${API_BASE_URL}/api/tasks/${task.id}/`, {
       method: 'PATCH',
       headers: {
         'Authorization': `Token ${token}`,
@@ -374,7 +376,7 @@ const handleDeleteTask = async (taskId: number) => {
           }
 
           try {
-            const response = await fetch(`http://localhost:8000/api/tasks/${taskId}/`, {
+            const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}/`, {
               method: 'DELETE',
               headers: {
                 'Authorization': `Token ${token}`,
@@ -416,9 +418,13 @@ const openEditModal = (task: Task) => {
 };
 
 const handleUpdateTask = async () => {
-  if (!editingTask.value) {
-    editTaskErrorMessage.value = 'No task selected for editing.';
-    showToast('No task selected for editing.', 'danger');
+  if (!editingTask.value) return;
+  editTaskErrorMessage.value = '';
+  const token = localStorage.getItem('authToken');
+
+  if (!token) {
+    editTaskErrorMessage.value = 'Authentication token not found. Please login again.';
+    showToast('Authentication token not found. Please login again.', 'danger');
     return;
   }
 
@@ -428,18 +434,9 @@ const handleUpdateTask = async () => {
     return;
   }
 
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    editTaskErrorMessage.value = 'Authentication token not found. Please login again.';
-    showToast('Authentication token not found. Please login again.', 'danger');
-    isEditModalOpen.value = false; // Close modal if auth fails
-    router.push('/login');
-    return;
-  }
-
   try {
-    const response = await fetch(`http://localhost:8000/api/tasks/${editingTask.value.id}/`, {
-      method: 'PATCH',
+    const response = await fetch(`${API_BASE_URL}/api/tasks/${editingTask.value.id}/`, {
+      method: 'PUT',
       headers: {
         'Authorization': `Token ${token}`,
         'Content-Type': 'application/json',
@@ -532,10 +529,14 @@ onIonViewDidEnter(async () => {
   opacity: 0.6;
 }
 
+.task-completed h3,
+.task-completed p {
+  text-decoration: line-through;
+}
 .spinner-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%; /* Make it take full height of the content area */
+  height: 50vh; /* Adjust as needed */
 }
 </style>
