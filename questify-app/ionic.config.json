@@ -1,0 +1,7 @@
+{
+  "name": "questify-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
