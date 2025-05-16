@@ -25,6 +25,8 @@ import { defineComponent, ref } from 'vue';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel, IonInput, IonButton } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'; // Fallback for local dev
+
 export default defineComponent({
   name: 'LoginPage',
   components: {
@@ -47,7 +49,7 @@ export default defineComponent({
     const handleLogin = async () => {
       errorMessage.value = ''; // Clear previous errors
       try {
-        const response = await fetch('http://localhost:8000/api-token-auth/', { // Asegúrate que esta URL es correcta para tu backend
+        const response = await fetch(`${API_BASE_URL}/api-token-auth/`, { // Use API_BASE_URL
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
