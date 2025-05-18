@@ -100,12 +100,12 @@
 </template>
 
 <script setup lang="ts">
-import { IonButton, IonButtons, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonInput, onIonViewDidEnter, IonCheckbox, IonIcon, alertController, toastController, IonSpinner, IonModal, IonProgressBar } from '@ionic/vue'; // Re-added IonProgressBar
+import { IonButton, IonButtons, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonInput, onIonViewDidEnter, IonCheckbox, IonIcon, alertController, toastController, IonSpinner, IonModal, IonProgressBar } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 import { trashOutline, pencilOutline, personCircleOutline } from 'ionicons/icons';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'; // Fallback for local dev
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 interface Task {
   id: number;
@@ -115,10 +115,17 @@ interface Task {
   xp_value: number;
 }
 
-// Re-added User and UserProfile interfaces
 interface User {
   id: number;
   username: string;
+}
+
+// --- Interface para Logros (debe ser consistente con ProfilePage.vue) ---
+interface Achievement { // Asegúrate que esta interfaz existe y es correcta
+  name: string;
+  description: string;
+  icon: string | null;
+  xp_reward: number;
 }
 
 interface UserProfile {
@@ -130,6 +137,7 @@ interface UserProfile {
   xp_for_next_level: number;
   xp_progress_in_current_level: number;
   xp_needed_for_level_up: number;
+  unlocked_achievements?: Achievement[]; // Mantener opcional o asegurar que siempre se envíe desde el backend
 }
 
 const router = useRouter();
@@ -316,41 +324,62 @@ const handleToggleCompleteTask = async (task: Task) => {
     return;
   }
 
-  const previousCompletedStatus = task.completed;
+  // Optimistic update (opcional, pero mejora la UX)
+  // const originalCompletedStatus = task.completed;
+  // task.completed = !task.completed;
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/tasks/${task.id}/`, {
-      method: 'PATCH',
+      method: 'PATCH', // O PUT si actualizas el objeto completo
       headers: {
         'Authorization': `Token ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        completed: !task.completed,
+        completed: !task.completed, // Enviar el nuevo estado
       }),
     });
 
     if (response.ok) {
-      await fetchTasks();
-      await fetchUserProfile(); // Re-added call to fetchUserProfile
-      showToast('Task status updated!', 'success');
-      if (!previousCompletedStatus && task.completed) { 
-        const completedTask = tasks.value.find(t => t.id === task.id);
-        if(completedTask && completedTask.completed){
-            showToast(`+${completedTask.xp_value} XP gained!`, 'success', 2500);
+      const responseData = await response.json(); // Contiene { task: {...}, newly_unlocked_achievements: [...] }
+      
+      // Actualizar la tarea en la lista local con los datos del backend
+      const index = tasks.value.findIndex(t => t.id === task.id);
+      if (index !== -1) {
+        tasks.value[index] = responseData.task;
+      }
+
+      showToast(`Task '${responseData.task.title}' ${responseData.task.completed ? 'completed' : 'marked as incomplete'}.`, 
+                responseData.task.completed ? 'success' : 'medium');
+
+      // Manejar logros desbloqueados con toasts (estado anterior al modal)
+      if (responseData.newly_unlocked_achievements && responseData.newly_unlocked_achievements.length > 0) {
+        for (const ach of responseData.newly_unlocked_achievements) {
+          let toastMessage = `Achievement Unlocked: ${ach.name}! (${ach.description})`;
+          if (ach.xp_reward > 0) {
+            toastMessage += ` +${ach.xp_reward} XP`;
+          }
+          showToast(toastMessage, 'tertiary', 5000); // Un color distintivo para logros
         }
       }
+      
+      fetchUserProfile(); // Actualizar el perfil del usuario (XP, nivel, etc.)
+
     } else {
+      // Revertir el cambio optimista si falló
+      // if (task.completed !== originalCompletedStatus) task.completed = originalCompletedStatus;
       const errorData = await response.json();
       errorMessage.value = `Failed to update task: ${errorData.detail || response.statusText}`;
-      showToast(`Failed to update task: ${errorData.detail || response.statusText}`, 'danger');
+      showToast(errorMessage.value, 'danger');
       if (response.status === 401) {
         router.push('/login');
       }
     }
   } catch (error) {
+    // Revertir el cambio optimista si falló
+    // if (task.completed !== originalCompletedStatus) task.completed = originalCompletedStatus;
     errorMessage.value = 'An error occurred while updating the task.';
-    showToast('An error occurred while updating the task.', 'danger');
+    showToast(errorMessage.value, 'danger');
     console.error('Update task error:', error);
   }
 };
@@ -417,26 +446,21 @@ const openEditModal = (task: Task) => {
   isEditModalOpen.value = true;
 };
 
+// Make sure handleUpdateTask (if used for editing tasks and completing them via modal) also handles achievements
 const handleUpdateTask = async () => {
   if (!editingTask.value) return;
-  editTaskErrorMessage.value = '';
   const token = localStorage.getItem('authToken');
+  editTaskErrorMessage.value = '';
 
   if (!token) {
-    editTaskErrorMessage.value = 'Authentication token not found. Please login again.';
-    showToast('Authentication token not found. Please login again.', 'danger');
-    return;
-  }
-
-  if (!editTaskTitle.value.trim()) {
-    editTaskErrorMessage.value = 'Title is required.';
-    showToast('Title is required.', 'warning');
+    editTaskErrorMessage.value = 'Authentication token not found.';
+    showToast(editTaskErrorMessage.value, 'danger');
     return;
   }
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/tasks/${editingTask.value.id}/`, {
-      method: 'PUT',
+      method: 'PUT', // O PATCH si solo envías campos modificados
       headers: {
         'Authorization': `Token ${token}`,
         'Content-Type': 'application/json',
@@ -444,34 +468,39 @@ const handleUpdateTask = async () => {
       body: JSON.stringify({
         title: editTaskTitle.value,
         description: editTaskDescription.value,
+        completed: editingTask.value.completed // Asegúrate de enviar el estado de completado actual
+        // Si el modal de edición permite cambiar 'completed', asegúrate que editingTask.value.completed se actualiza
       }),
     });
 
     if (response.ok) {
-      await fetchTasks(); // Recargar la lista de tareas
+      const responseData = await response.json(); // { task: {...}, newly_unlocked_achievements: [...] }
+      const index = tasks.value.findIndex(t => t.id === editingTask.value!.id);
+      if (index !== -1) {
+        tasks.value[index] = responseData.task;
+      }
+      isEditModalOpen.value = false;
       showToast('Task updated successfully!', 'success');
-      isEditModalOpen.value = false; // Cerrar el modal
-      // Limpiar refs de edición
-      editingTask.value = null;
-      editTaskTitle.value = '';
-      editTaskDescription.value = '';
-      editTaskErrorMessage.value = '';
+      
+      // Manejar logros desbloqueados con toasts
+      if (responseData.newly_unlocked_achievements && responseData.newly_unlocked_achievements.length > 0) {
+        for (const ach of responseData.newly_unlocked_achievements) {
+          let toastMessage = `Achievement Unlocked: ${ach.name}! (${ach.description})`;
+          if (ach.xp_reward > 0) {
+            toastMessage += ` +${ach.xp_reward} XP`;
+          }
+          showToast(toastMessage, 'tertiary', 5000);
+        }
+      }
+      fetchUserProfile(); // Actualizar perfil
     } else {
       const errorData = await response.json();
-      let detailedError = 'Failed to update task.';
-      if (errorData.title) detailedError += ` Title: ${errorData.title.join(', ')}`;
-      if (errorData.description) detailedError += ` Description: ${errorData.description.join(', ')}`;
-      if (errorData.detail) detailedError = errorData.detail;
-      editTaskErrorMessage.value = detailedError;
-      showToast(detailedError, 'danger');
-      if (response.status === 401) {
-        isEditModalOpen.value = false; // Close modal on auth error
-        router.push('/login');
-      }
+      editTaskErrorMessage.value = `Failed to update task: ${errorData.detail || JSON.stringify(errorData)}`;
+      showToast(editTaskErrorMessage.value, 'danger');
     }
   } catch (error) {
     editTaskErrorMessage.value = 'An error occurred while updating the task.';
-    showToast('An error occurred while updating the task.', 'danger');
+    showToast(editTaskErrorMessage.value, 'danger');
     console.error('Update task error:', error);
   }
 };
