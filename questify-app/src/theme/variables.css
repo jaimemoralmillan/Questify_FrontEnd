@@ -1,2 +1,154 @@
-/* For information on how to create your own theme, please see:
-http://ionicframework.com/docs/theming/ */
+/* Ejemplo con Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+  /* Pixel Art Color Palette */
+  --pixel-bg-dark: #302c4d; /* Nuevo fondo principal más vibrante */
+  --pixel-bg-medium: #4f4a75; /* Nuevo fondo de contenedor más vibrante */
+  --pixel-border-dark: #000000;
+  --pixel-border-light: #8880b7; /* Ajustado para armonizar con morados */
+  --pixel-text-light: #E0E0E0;
+  --pixel-primary: #4e378d; /* Azul Estándar Agradable */
+  --pixel-primary-shade: #005A9E; /* Azul Más Oscuro */
+  --pixel-accent: #FFD700; /* Amarillo Dorado */
+  --pixel-danger: #FF4136; /* Retro Red for errors */
+
+  --pixel-xp-bar-fill: #3AE73A; /* Neon Green */
+  --pixel-xp-bar-bg: #25213a; /* Morado oscuro para fondo de barra de XP */
+
+  /* Overriding Ionic default colors (optional, but can help consistency) */
+  --ion-color-primary: var(--pixel-primary);
+  --ion-color-primary-shade: var(--pixel-primary-shade);
+  --ion-text-color: var(--pixel-text-light);
+  --ion-background-color: var(--pixel-bg-dark);
+  --ion-toolbar-background: var(--pixel-bg-medium);
+  --ion-item-background: transparent; /* Ensure items are transparent over new backgrounds */
+  --ion-card-background: var(--pixel-bg-medium);
+}
+
+* { /* Aplica globalmente o a elementos específicos */
+  font-family: 'Press Start 2P', cursive;
+  color: var(--pixel-text-light); /* Default text color */
+}
+
+body {
+  background-color: var(--pixel-bg-dark); /* Set global background */
+}
+
+.pixel-border-container {
+  border: 4px solid var(--pixel-border-dark); /* Borde exterior */
+  box-shadow: 
+    inset 0 0 0 2px var(--pixel-border-light), /* Borde interior claro */
+    inset 0 0 0 4px var(--pixel-border-dark); /* Borde interior oscuro */
+  background-color: var(--pixel-bg-medium); /* Background for containers */
+  padding: 20px; /* Add some padding by default */
+}
+
+ion-button {
+  border-radius: 0;
+  box-shadow: none;
+  border: 2px solid var(--pixel-border-dark);
+  background-color: var(--pixel-primary);
+  color: var(--pixel-text-light); /* Text color for primary buttons */
+  font-family: 'Press Start 2P', cursive; /* Si no está global */
+  text-transform: uppercase;
+  padding: 10px 15px; /* Adjust padding for better feel */
+}
+ion-button:active { /* Efecto de botón presionado */
+  background-color: var(--pixel-primary-shade);
+  transform: translateY(2px);
+}
+
+/* Contenedor de la barra de XP */
+.xp-bar-container {
+  width: 100%;
+  height: 24px; /* Altura de la barra, ajústala a tu gusto */
+  background-color: var(--pixel-xp-bar-bg); /* Color de fondo para la parte "vacía" de la barra */
+  border: 2px solid var(--pixel-border-dark); /* Borde exterior negro */
+  padding: 2px; /* Espacio para el borde interior */
+  box-sizing: border-box; /* Para que el padding no aumente el tamaño total */
+  margin-bottom: 4px; /* Espacio entre la barra y el texto */
+}
+
+/* Estilos para ion-progress-bar */
+.pixel-xp-bar {
+  height: 100%; /* Que ocupe toda la altura del contenedor interno */
+  --background: transparent; /* Hacemos transparente el fondo por defecto de la parte vacía */
+  --progress-background: var(--pixel-xp-bar-fill); /* Color verde neón para el progreso (ajusta a tu paleta) */
+  border-radius: 0; /* Aseguramos que no haya bordes redondeados */
+}
+
+/* Texto de XP */
+.xp-text {
+  /* La fuente 'Press Start 2P' ya debería aplicarse globalmente */
+  color: var(--pixel-text-light); /* Color del texto */
+  font-size: 10px; /* Tamaño pequeño, típico de UI de juegos retro */
+  text-align: center; /* Centrar el texto */
+  margin-top: 0;
+  /* Opcional: Sombra para mejorar legibilidad si el fondo es complejo */
+  /* text-shadow: 1px 1px var(--pixel-border-dark); */
+}
+
+/* Opcional: Estilos para la sección general de XP si es necesario */
+.xp-section {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+/* Ensure ion-content background is also set if not inheriting properly */
+ion-content {
+  --background: var(--pixel-bg-dark); /* Asegurar que usa el nuevo fondo principal */
+}
+
+/* Restoring the grid pattern for ion-content background */
+ion-content::part(background) {
+  background-color: var(--pixel-bg-dark); /* Base color for the grid background */
+  background-image:
+    linear-gradient(to right, var(--pixel-border-dark) 1px, transparent 1px), /* Vertical lines */
+    linear-gradient(to bottom, var(--pixel-border-dark) 1px, transparent 1px); /* Horizontal lines */
+  background-size: 24px 24px; /* Size of each grid cell */
+  background-repeat: repeat; /* Ensure the pattern tiles across the whole background */
+  background-position: 0 0; /* Align the pattern to the top-left */
+}
+
+/* Style for ion-item to fit the theme */
+ion-item {
+  --background: transparent; /* Fondo transparente para los items */
+  --border-color: var(--pixel-border-light); /* Color del borde de los items */
+  --highlight-color-focused: var(--pixel-primary); /* Color al enfocar */
+  --padding-start: 10px;
+  border-radius: 0; /* Sin bordes redondeados */
+  margin-bottom: 15px; /* Espacio entre campos */
+  border-bottom: 2px solid var(--pixel-border-light); /* Pixel-style bottom border */
+}
+
+ion-item.item-has-focus ion-label, /* Keep label color consistent on focus */
+ion-item.item-interactive.ion-dirty ion-label,
+ion-item.item-interactive.ion-valid ion-label {
+  color: var(--pixel-text-light);
+}
+
+ion-label {
+  color: var(--pixel-text-light) !important; /* Ensure label color */
+  font-size: 0.9em;
+}
+
+ion-input {
+  --color: var(--pixel-text-light); /* Text input color */
+  --padding-start: 10px; /* Padding interno del input */
+  --placeholder-color: var(--pixel-border-light);
+  font-size: 1em;
+}
+
+ion-toolbar {
+  --background: var(--pixel-bg-medium);
+  --border-width: 0 0 4px 0; /* Bottom border for toolbar */
+  --border-color: var(--pixel-border-dark);
+  --min-height: 50px;
+}
+
+ion-title {
+  color: var(--pixel-text-light);
+  font-size: 1.2em;
+  padding: 0 10px;
+}
