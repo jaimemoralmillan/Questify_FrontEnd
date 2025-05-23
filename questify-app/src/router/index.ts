@@ -11,7 +11,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/home',
     name: 'Home',
-    component: () => import('@/views/HomePage.vue'),
+    component: HomePage,
     meta: { requiresAuth: true } // Añadir meta para rutas protegidas
   },
   {
@@ -24,6 +24,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Profile',
     component: () => import('@/views/ProfilePage.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/rewards', // Nueva ruta
+    name: 'Rewards',
+    component: () => import('@/views/RewardsPage.vue'),
+    meta: { requiresAuth: true } // Añadir meta para rutas protegidas
   }
 ];
 

@@ -102,10 +102,10 @@ ion-content {
 
 /* Restoring the grid pattern for ion-content background */
 ion-content::part(background) {
-  background-color: var(--pixel-bg-dark); /* Base color for the grid background */
+  background-color: var(--current-bg-for-grid, var(--pixel-bg-dark)); /* Base color for the grid background */
   background-image:
-    linear-gradient(to right, var(--pixel-border-dark) 1px, transparent 1px), /* Vertical lines */
-    linear-gradient(to bottom, var(--pixel-border-dark) 1px, transparent 1px); /* Horizontal lines */
+    linear-gradient(to right, var(--current-border-for-grid, var(--pixel-border-dark)) 1px, transparent 1px), /* Vertical lines */
+    linear-gradient(to bottom, var(--current-border-for-grid, var(--pixel-border-dark)) 1px, transparent 1px); /* Horizontal lines */
   background-size: 24px 24px; /* Size of each grid cell */
   background-repeat: repeat; /* Ensure the pattern tiles across the whole background */
   background-position: 0 0; /* Align the pattern to the top-left */
